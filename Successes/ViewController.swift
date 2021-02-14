@@ -11,7 +11,7 @@ class ViewController: UIViewController {
   
   @IBOutlet weak var resultImage: UIImageView!
   @IBOutlet weak var resultLabel: UILabel!
-  @IBOutlet weak var rawResultLabel: UILabel!
+  @IBOutlet weak var diceStack: UIStackView!
   @IBOutlet weak var defaultDifficultyButton: UIButton!
   
   var lastPressedDifficulty: UIButton? {
@@ -43,7 +43,6 @@ class ViewController: UIViewController {
     
     lastPressedDifficulty = defaultDifficultyButton
     resultLabel.text = ""
-    rawResultLabel.text = ""
   }
   
   @IBAction func poolPressed(_ sender: UIButton) {
@@ -93,8 +92,46 @@ class ViewController: UIViewController {
       resultLabel.textColor = .white
     }
     
-    let dice = diceBag!.dice.map { die in String(die) }
-    rawResultLabel.text = dice.joined(separator: ", ")
+    diceStack.removeAllArrangedSubviews()
+    for die in diceBag!.dice {
+      diceStack.addArrangedSubview(diceView(for: die))
+    }
+  }
+  
+  /// Generates a label with a colored background baced on the value of `die`.
+  ///
+  /// - Parameter die: The content of the label.
+  /// - Returns: The formatted label. It has a width constraint of 50.
+  func diceView(for die: Int) -> UILabel {
+    let label = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    //Set the label apperance
+    label.addConstraint(NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal,
+                                           toItem: nil, attribute: .width, multiplier: 1,
+                                           constant: 50))
+    label.layer.cornerRadius = 5
+    label.layer.masksToBounds = true
+    
+    // Set the text and font
+    label.text = String(die)
+    label.textColor = .white
+    label.textAlignment = .center
+    label.font = .systemFont(ofSize: 20, weight: .bold)
+    
+    // Set label background color
+    switch die {
+    case 1:
+      label.backgroundColor = .red
+    case difficulty...:
+      if die == 10 && specialty {
+        label.backgroundColor = .systemGreen
+      } else {
+        label.backgroundColor = .lightGreen
+      }
+    default:
+      label.backgroundColor = .lightGray
+    }
+    
+    return label
   }
   
 }
