@@ -9,6 +9,7 @@ import UIKit
 
 class ViewController: UIViewController {
   
+  @IBOutlet weak var resultImage: UIImageView!
   @IBOutlet weak var resultLabel: UILabel!
   @IBOutlet weak var rawResultLabel: UILabel!
   @IBOutlet weak var defaultDifficultyButton: UIButton!
@@ -41,11 +42,13 @@ class ViewController: UIViewController {
     super.viewDidLoad()
     
     lastPressedDifficulty = defaultDifficultyButton
+    resultLabel.text = ""
+    rawResultLabel.text = ""
   }
   
   @IBAction func poolPressed(_ sender: UIButton) {
     lastPressedPool = sender
-    pool = Int(sender.title(for: .normal)!)
+    pool = Int(sender.currentTitle!)
     
     diceBag = DiceBag(pool: pool!,
                       specialty: specialty,
@@ -56,7 +59,7 @@ class ViewController: UIViewController {
   
   @IBAction func difficultyPressed(_ sender: UIButton) {
     lastPressedDifficulty = sender
-    difficulty = Int(sender.title(for: .normal)!)!
+    difficulty = Int(sender.currentTitle!)!
     diceBag?.difficulty = difficulty
   }
   
@@ -77,12 +80,21 @@ class ViewController: UIViewController {
     
     switch rollResult {
     case .failure:
-      resultLabel.text = "Failure"
+      resultImage.image = #imageLiteral(resourceName: "Failure D10")
+      resultLabel.text = ""
+      resultLabel.textColor = .black
     case .botch(let severity):
-      resultLabel.text = "\(severity) Botch"
+      resultImage.image = #imageLiteral(resourceName: "Botch D10")
+      resultLabel.text = "\(severity)"
+      resultLabel.textColor = .white
     case .success(let degree):
-      resultLabel.text = "\(degree) \(degree > 1 ? "Successes" : "Success")"
+      resultImage.image = #imageLiteral(resourceName: "Succes D10")
+      resultLabel.text = "\(degree)"
+      resultLabel.textColor = .white
     }
+    
+    let dice = diceBag!.dice.map { die in String(die) }
+    rawResultLabel.text = dice.joined(separator: ", ")
   }
   
 }
