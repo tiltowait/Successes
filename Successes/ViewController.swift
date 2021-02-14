@@ -11,6 +11,7 @@ class ViewController: UIViewController {
   
   enum RollChange {
     case complete
+    case difficulty
     case willpower
     case specialty
     case autos
@@ -23,13 +24,13 @@ class ViewController: UIViewController {
   
   var lastPressedDifficulty: UIButton? {
     willSet {
-      animateButtonChange(firstButton: lastPressedDifficulty, firstColor: .systemGray,
+      changeBackground(firstButton: lastPressedDifficulty, firstColor: .systemGray,
                           secondButton: newValue, secondColor: .systemBlue)
     }
   }
   var lastPressedPool: UIButton? {
     willSet {
-      animateButtonChange(firstButton: lastPressedPool, firstColor: .systemGray,
+      changeBackground(firstButton: lastPressedPool, firstColor: .systemGray,
                           secondButton: newValue, secondColor: .systemRed)
     }
   }
@@ -46,6 +47,8 @@ class ViewController: UIViewController {
       
       if newValue?.dice != _diceBag?.dice {
         change = .complete
+      } else if newValue?.difficulty != _diceBag?.difficulty {
+        change = .difficulty
       } else if newValue?.willpower != _diceBag?.willpower {
         change = .willpower
       } else if newValue?.specialty != _diceBag?.specialty {
@@ -95,15 +98,18 @@ class ViewController: UIViewController {
   @IBAction func toggleSpecialty(_ sender: UIButton) {
     specialty.toggle()
     diceBag?.specialty = specialty
-    animateButtonChange(firstButton: sender, firstColor: specialty ? .systemGreen : .systemGray)
+    changeBackground(firstButton: sender, firstColor: specialty ? .systemGreen : .systemGray)
   }
   
   @IBAction func toggleWillpower(_ sender: UIButton) {
     willpower.toggle()
     diceBag?.willpower = willpower
-    animateButtonChange(firstButton: sender, firstColor: willpower ? .systemGreen : .systemGray)
+    changeBackground(firstButton: sender, firstColor: willpower ? .systemGreen : .systemGray)
   }
   
+  /// Updates all the displays for the current (or new) roll.
+  ///
+  /// - Parameter change: Indicates the type of update that needs to occur.
   func updateDisplay(change: RollChange) {
     guard let rollResult = diceBag?.result else { return }
     print(rollResult)
@@ -155,12 +161,18 @@ class ViewController: UIViewController {
           delay += 0.1
         }
       }
+    case .difficulty:
+      for dieView in diceStack.arrangedSubviews {
+        UIView.animate(withDuration: 0.1) {
+          dieView.layer.backgroundColor = self.background(forDie: dieView.tag)
+        }
+      }
     case .specialty:
       // Animate the background change for 10s
       for dieView in diceStack.arrangedSubviews {
         if dieView.tag == 10 {
           UIView.animate(withDuration: 0.1) {
-            dieView.layer.backgroundColor = self.specialty ? UIColor.systemGreen.cgColor : UIColor.lightGreen.cgColor
+            dieView.layer.backgroundColor = self.background(forDie: 10)
           }
         }
       }
@@ -186,6 +198,7 @@ class ViewController: UIViewController {
                                            constant: 50))
     label.layer.cornerRadius = 5
     label.layer.masksToBounds = true
+    label.layer.backgroundColor = background(forDie: die)
     
     // Set the text and font
     label.text = String(die)
@@ -193,21 +206,30 @@ class ViewController: UIViewController {
     label.textAlignment = .center
     label.font = .systemFont(ofSize: 20, weight: .bold)
     
-    // Set label background color
+    return label
+  }
+  
+  /// Returns a `CGColor` based on the `die`.
+  ///
+  /// - Parameter die: A number from 1-10.
+  ///                  1: Red.
+  ///                  `Target`+: Light green.
+  ///                  10 + specialty: Dark green.
+  ///                  All else: Gray.
+  /// - Returns: The CGColor for the associated `die`.
+  func background(forDie die: Int) -> CGColor {
     switch die {
     case 1:
-      label.backgroundColor = .red
+      return UIColor.systemRed.cgColor
     case difficulty...:
       if die == 10 && specialty {
-        label.layer.backgroundColor = UIColor.systemGreen.cgColor
+        return UIColor.systemGreen.cgColor
       } else {
-        label.layer.backgroundColor = UIColor.lightGreen.cgColor
+        return UIColor.lightGreen.cgColor
       }
     default:
-      label.backgroundColor = .lightGray
+      return UIColor.lightGray.cgColor
     }
-    
-    return label
   }
   
   /// Animates the background color change for up to two buttons.
@@ -216,8 +238,8 @@ class ViewController: UIViewController {
   ///   - firstColor: The new background color for the first button
   ///   - secondButton: The second button to animate
   ///   - secondColor: The new background color for the second button
-  func animateButtonChange(firstButton: UIButton?, firstColor: UIColor?, secondButton: UIButton? = nil, secondColor: UIColor? = nil) {
-    UIView.animate(withDuration: 0.1) {
+  func changeBackground(firstButton: UIButton?, firstColor: UIColor?, secondButton: UIButton? = nil, secondColor: UIColor? = nil) {
+    UIView.animate(withDuration: 0.15) {
       firstButton?.layer.backgroundColor = firstColor?.cgColor
       secondButton?.layer.backgroundColor = secondColor?.cgColor
     }
