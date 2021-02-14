@@ -9,6 +9,13 @@ import UIKit
 
 class ViewController: UIViewController {
   
+  enum RollChange {
+    case complete
+    case willpower
+    case specialty
+    case autos
+  }
+  
   @IBOutlet weak var resultImage: UIImageView!
   @IBOutlet weak var resultLabel: UILabel!
   @IBOutlet weak var diceStack: UIStackView!
@@ -32,9 +39,26 @@ class ViewController: UIViewController {
   var specialty = false
   var willpower = false
   
+  private var _diceBag: DiceBag?
   var diceBag: DiceBag? {
-    didSet {
-      updateDisplay()
+    set {
+      let change: RollChange
+      
+      if newValue?.dice != _diceBag?.dice {
+        change = .complete
+      } else if newValue?.willpower != _diceBag?.willpower {
+        change = .willpower
+      } else if newValue?.specialty != _diceBag?.specialty {
+        change = .specialty
+      } else {
+        change = .autos
+      }
+      _diceBag = newValue
+      
+      updateDisplay(change: change)
+    }
+    get {
+      _diceBag
     }
   }
   
@@ -74,9 +98,9 @@ class ViewController: UIViewController {
     sender.backgroundColor = willpower ? .systemGreen : .systemGray
   }
   
-  func updateDisplay() {
+  func updateDisplay(change: RollChange) {
     guard let rollResult = diceBag?.result else { return }
-    
+    print(rollResult)
     switch rollResult {
     case .failure:
       resultImage.image = #imageLiteral(resourceName: "Failure D10")
@@ -92,9 +116,47 @@ class ViewController: UIViewController {
       resultLabel.textColor = .white
     }
     
-    diceStack.removeAllArrangedSubviews()
-    for die in diceBag!.dice {
-      diceStack.addArrangedSubview(diceView(for: die))
+    let deadline: DispatchTime
+    
+    switch change {
+    case .complete:
+      if !diceStack.arrangedSubviews.isEmpty {
+        deadline = .now() + 0.1
+        
+        UIView.animate(withDuration: 0.1, animations: {
+          for dieView in self.diceStack.arrangedSubviews {
+            dieView.alpha = 0.0
+          }
+        }) { _ in
+          self.diceStack.removeAllArrangedSubviews()
+        }
+      } else {
+        deadline = .now()
+      }
+      
+      DispatchQueue.main.asyncAfter(deadline: deadline) { [self] in
+        var delay: TimeInterval = 0.0
+        
+        for die in diceBag!.dice {
+          let dieView = diceView(for: die)
+          diceStack.addArrangedSubview(dieView)
+          
+          // Set a neat little fade in animation
+          dieView.alpha = 0.0
+          UIView.animate(withDuration: 0.15, delay: delay) {
+            dieView.alpha = 1.0
+          }
+          delay += 0.1
+        }
+      }
+    case .specialty:
+      for dieView in diceStack.arrangedSubviews {
+        if dieView.tag == 10 {
+          dieView.backgroundColor = specialty ? .systemGreen : .lightGreen
+        }
+      }
+    default:
+      break
     }
   }
   
@@ -104,10 +166,13 @@ class ViewController: UIViewController {
   /// - Returns: The formatted label. It has a width constraint of 50.
   func diceView(for die: Int) -> UILabel {
     let label = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
+    label.tag = die
+    
     //Set the label apperance
     label.addConstraint(NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal,
                                            toItem: nil, attribute: .width, multiplier: 1,
                                            constant: 50))
+    label.addConstraint(NSLayoutConstraint(item: label, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 50))
     label.layer.cornerRadius = 5
     label.layer.masksToBounds = true
     
