@@ -115,17 +115,11 @@ class ViewController: UIViewController {
     print(rollResult)
     switch rollResult {
     case .failure:
-      resultImage.image = #imageLiteral(resourceName: "Failure D10")
-      resultLabel.text = ""
-      resultLabel.textColor = .black
+      updateResult(image: #imageLiteral(resourceName: "Failure D10"), label: "")
     case .botch(let severity):
-      resultImage.image = #imageLiteral(resourceName: "Botch D10")
-      resultLabel.text = "\(severity)"
-      resultLabel.textColor = .white
+      updateResult(image: #imageLiteral(resourceName: "Botch D10"), label: "\(severity)")
     case .success(let degree):
-      resultImage.image = #imageLiteral(resourceName: "Succes D10")
-      resultLabel.text = "\(degree)"
-      resultLabel.textColor = .white
+      updateResult(image: #imageLiteral(resourceName: "Succes D10"), label: "\(degree)")
     }
     
     let deadline: DispatchTime
@@ -243,6 +237,27 @@ class ViewController: UIViewController {
       firstButton?.layer.backgroundColor = firstColor?.cgColor
       secondButton?.layer.backgroundColor = secondColor?.cgColor
     }
+  }
+  
+  /// The transition used for changing the main result background image.
+  lazy var transition: CATransition = {
+    let transition = CATransition()
+    transition.duration = 0.1
+    transition.timingFunction = .init(name: .linear)
+    transition.type = .fade
+    
+    return transition
+  }()
+  
+  /// Updates the main result view, animating the image change.
+  ///
+  /// - Parameters:
+  ///   - image: The new background image
+  ///   - label: The †ext to overlay the image
+  func updateResult(image: UIImage, label: String) {
+    resultImage.image = image
+    resultImage.layer.add(self.transition, forKey: nil)
+    resultLabel.text = label
   }
   
 }
