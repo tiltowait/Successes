@@ -23,14 +23,14 @@ class ViewController: UIViewController {
   
   var lastPressedDifficulty: UIButton? {
     willSet {
-      lastPressedDifficulty?.backgroundColor = .systemGray
-      newValue?.backgroundColor = .systemBlue
+      animateButtonChange(firstButton: lastPressedDifficulty, firstColor: .systemGray,
+                          secondButton: newValue, secondColor: .systemBlue)
     }
   }
   var lastPressedPool: UIButton? {
     willSet {
-      lastPressedPool?.backgroundColor = .systemGray
-      newValue?.backgroundColor = .systemRed
+      animateButtonChange(firstButton: lastPressedPool, firstColor: .systemGray,
+                          secondButton: newValue, secondColor: .systemRed)
     }
   }
   
@@ -67,6 +67,12 @@ class ViewController: UIViewController {
     
     lastPressedDifficulty = defaultDifficultyButton
     resultLabel.text = ""
+    
+    // Set all button layer background colors
+    for button in self.view.subviews.compactMap({ $0 as? UIButton }) {
+      button.layer.backgroundColor = button.backgroundColor?.cgColor
+      button.backgroundColor = .clear
+    }
   }
   
   @IBAction func poolPressed(_ sender: UIButton) {
@@ -89,13 +95,13 @@ class ViewController: UIViewController {
   @IBAction func toggleSpecialty(_ sender: UIButton) {
     specialty.toggle()
     diceBag?.specialty = specialty
-    sender.backgroundColor = specialty ? .systemGreen : .systemGray
+    animateButtonChange(firstButton: sender, firstColor: specialty ? .systemGreen : .systemGray)
   }
   
   @IBAction func toggleWillpower(_ sender: UIButton) {
     willpower.toggle()
     diceBag?.willpower = willpower
-    sender.backgroundColor = willpower ? .systemGreen : .systemGray
+    animateButtonChange(firstButton: sender, firstColor: willpower ? .systemGreen : .systemGray)
   }
   
   func updateDisplay(change: RollChange) {
@@ -175,7 +181,9 @@ class ViewController: UIViewController {
     label.addConstraint(NSLayoutConstraint(item: label, attribute: .width, relatedBy: .equal,
                                            toItem: nil, attribute: .width, multiplier: 1,
                                            constant: 50))
-    label.addConstraint(NSLayoutConstraint(item: label, attribute: .height, relatedBy: .equal, toItem: nil, attribute: .height, multiplier: 1, constant: 50))
+    label.addConstraint(NSLayoutConstraint(item: label, attribute: .height, relatedBy: .equal,
+                                           toItem: nil, attribute: .height, multiplier: 1,
+                                           constant: 50))
     label.layer.cornerRadius = 5
     label.layer.masksToBounds = true
     
@@ -200,6 +208,19 @@ class ViewController: UIViewController {
     }
     
     return label
+  }
+  
+  /// Animates the background color change for up to two buttons.
+  /// - Parameters:
+  ///   - firstButton: The first button to animate
+  ///   - firstColor: The new background color for the first button
+  ///   - secondButton: The second button to animate
+  ///   - secondColor: The new background color for the second button
+  func animateButtonChange(firstButton: UIButton?, firstColor: UIColor?, secondButton: UIButton? = nil, secondColor: UIColor? = nil) {
+    UIView.animate(withDuration: 0.1) {
+      firstButton?.layer.backgroundColor = firstColor?.cgColor
+      secondButton?.layer.backgroundColor = secondColor?.cgColor
+    }
   }
   
 }
