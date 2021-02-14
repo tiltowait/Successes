@@ -150,9 +150,12 @@ class ViewController: UIViewController {
         }
       }
     case .specialty:
+      // Animate the background change for 10s
       for dieView in diceStack.arrangedSubviews {
         if dieView.tag == 10 {
-          dieView.backgroundColor = specialty ? .systemGreen : .lightGreen
+          UIView.animate(withDuration: 0.1) {
+            dieView.layer.backgroundColor = self.specialty ? UIColor.systemGreen.cgColor : UIColor.lightGreen.cgColor
+          }
         }
       }
     default:
@@ -188,9 +191,9 @@ class ViewController: UIViewController {
       label.backgroundColor = .red
     case difficulty...:
       if die == 10 && specialty {
-        label.backgroundColor = .systemGreen
+        label.layer.backgroundColor = UIColor.systemGreen.cgColor
       } else {
-        label.backgroundColor = .lightGreen
+        label.layer.backgroundColor = UIColor.lightGreen.cgColor
       }
     default:
       label.backgroundColor = .lightGray
