@@ -112,7 +112,7 @@ class ViewController: UIViewController {
   /// - Parameter change: Indicates the type of update that needs to occur.
   func updateDisplay(change: RollChange) {
     guard let rollResult = diceBag?.result else { return }
-    print(rollResult)
+    
     switch rollResult {
     case .failure:
       updateResult(image: #imageLiteral(resourceName: "Failure D10"), label: "")
@@ -242,7 +242,7 @@ class ViewController: UIViewController {
   /// The transition used for changing the main result background image.
   lazy var transition: CATransition = {
     let transition = CATransition()
-    transition.duration = 0.1
+    transition.duration = 0.2
     transition.timingFunction = .init(name: .linear)
     transition.type = .fade
     
@@ -254,10 +254,12 @@ class ViewController: UIViewController {
   /// - Parameters:
   ///   - image: The new background image
   ///   - label: The †ext to overlay the image
-  func updateResult(image: UIImage, label: String) {
+  func updateResult(image: UIImage, label text: String) {
     resultImage.image = image
-    resultImage.layer.add(self.transition, forKey: nil)
-    resultLabel.text = label
+    resultImage.layer.add(transition, forKey: nil) // Animate the transition
+    
+    resultLabel.text = text
+    resultLabel.layer.add(transition, forKey: nil)
   }
   
 }
