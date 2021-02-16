@@ -115,7 +115,7 @@ class ViewController: UIViewController {
     
     switch rollResult {
     case .failure:
-      updateResult(image: #imageLiteral(resourceName: "Failure D10"), label: "")
+      updateResult(image: #imageLiteral(resourceName: "Failure D10"), label: "0")
     case .botch(let severity):
       updateResult(image: #imageLiteral(resourceName: "Botch D10"), label: "\(severity)")
     case .success(let degree):
@@ -156,17 +156,21 @@ class ViewController: UIViewController {
         }
       }
     case .difficulty:
-      for dieView in diceStack.arrangedSubviews {
+      for dieView in diceStack.arrangedSubviews.map({ $0 as! UILabel }) {
         UIView.animate(withDuration: 0.1) {
-          dieView.layer.backgroundColor = self.background(forDie: dieView.tag)
+          let (dieColor, textColor) = self.background(forDie: dieView.tag)
+          dieView.layer.backgroundColor = dieColor
+          dieView.textColor = textColor
         }
       }
-    case .specialty:
-      // Animate the background change for 10s
-      for dieView in diceStack.arrangedSubviews {
+    case .specialty: // Animate the background change for 10s
+      let (dieColor, textColor) = background(forDie: 10)
+      
+      for dieView in diceStack.arrangedSubviews.map({ $0 as! UILabel }) {
         if dieView.tag == 10 {
           UIView.animate(withDuration: 0.1) {
-            dieView.layer.backgroundColor = self.background(forDie: 10)
+            dieView.layer.backgroundColor = dieColor
+            dieView.textColor = textColor
           }
         }
       }
@@ -192,11 +196,13 @@ class ViewController: UIViewController {
                                            constant: 50))
     label.layer.cornerRadius = 5
     label.layer.masksToBounds = true
-    label.layer.backgroundColor = background(forDie: die)
+    
+    let (dieColor, textColor) = background(forDie: die)
+    label.layer.backgroundColor = dieColor
     
     // Set the text and font
     label.text = String(die)
-    label.textColor = .white
+    label.textColor = textColor
     label.textAlignment = .center
     label.font = .systemFont(ofSize: 20, weight: .bold)
     
@@ -211,18 +217,18 @@ class ViewController: UIViewController {
   ///                  10 + specialty: Dark green.
   ///                  All else: Gray.
   /// - Returns: The CGColor for the associated `die`.
-  func background(forDie die: Int) -> CGColor {
+  func background(forDie die: Int) -> (CGColor, UIColor) {
     switch die {
     case 1:
-      return UIColor.systemRed.cgColor
+      return (UIColor.systemRed.cgColor, .white)
     case difficulty...:
       if die == 10 && specialty {
-        return UIColor.systemGreen.cgColor
+        return (UIColor.systemGreen.cgColor, .white)
       } else {
-        return UIColor.lightGreen.cgColor
+        return (UIColor.lightGreen.cgColor, .black)
       }
     default:
-      return UIColor.lightGray.cgColor
+      return (UIColor.lightGray.cgColor, .black)
     }
   }
   

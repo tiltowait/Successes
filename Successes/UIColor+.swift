@@ -13,4 +13,8 @@ extension UIColor {
     UIColor(named: "Light Green")!
   }
   
+  static var lightGray: UIColor {
+    UIColor(named: "Light Gray")!
+  }
+  
 }
