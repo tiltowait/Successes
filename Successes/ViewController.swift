@@ -98,13 +98,13 @@ class ViewController: UIViewController {
   @IBAction func toggleSpecialty(_ sender: UIButton) {
     specialty.toggle()
     diceBag?.specialty = specialty
-    changeBackground(firstButton: sender, firstColor: specialty ? .systemGreen : .systemGray)
+    changeBackground(firstButton: sender, firstColor: specialty ? .systemOrange : .systemGray)
   }
   
   @IBAction func toggleWillpower(_ sender: UIButton) {
     willpower.toggle()
     diceBag?.willpower = willpower
-    changeBackground(firstButton: sender, firstColor: willpower ? .systemGreen : .systemGray)
+    changeBackground(firstButton: sender, firstColor: willpower ? .systemOrange : .systemGray)
   }
   
   /// Updates all the displays for the current (or new) roll.
@@ -122,49 +122,44 @@ class ViewController: UIViewController {
       updateResult(image: #imageLiteral(resourceName: "Succes D10"), label: "\(degree)")
     }
     
-    let deadline: DispatchTime
-    
     switch change {
     case .complete:
+      var startTime: DispatchTime = .now()
+      let removalDuration = 0.14
+      
+      // Remove the previous dice, if there are any
       if !diceStack.arrangedSubviews.isEmpty {
-        deadline = .now() + 0.1
+        startTime = .now() + removalDuration
         
-        UIView.animate(withDuration: 0.1, animations: {
-          for dieView in self.diceStack.arrangedSubviews {
-            dieView.alpha = 0.0
-          }
-        }) { _ in
+        UIView.animate(withDuration: removalDuration, animations: {
+          self.diceStack.arrangedSubviews.forEach { $0.alpha = 0 }
+        }) { _ in // Completion handler
           self.diceStack.removeAllArrangedSubviews()
         }
-      } else {
-        deadline = .now()
       }
       
-      DispatchQueue.main.asyncAfter(deadline: deadline) { [self] in
-        var delay: TimeInterval = 0.0
+      DispatchQueue.main.asyncAfter(deadline: startTime + 0.1) { [unowned self] in
+        let diceViews = diceBag!.dice.map { diceView(for: $0) }
+        diceViews.forEach { diceStack.addArrangedSubview($0) }
         
-        for die in diceBag!.dice {
-          let dieView = diceView(for: die)
-          diceStack.addArrangedSubview(dieView)
-          
-          // Set a neat little fade in animation
-          dieView.alpha = 0.0
-          UIView.animate(withDuration: 0.15, delay: delay) {
+        // Provide a nice little animation for their reveal
+        for dieView in diceViews {
+          UIView.animate(withDuration: 0.3) {
             dieView.alpha = 1.0
+            dieView.isHidden = false
           }
-          delay += 0.1
         }
       }
     case .difficulty:
       for dieView in diceStack.arrangedSubviews.map({ $0 as! UILabel }) {
         UIView.animate(withDuration: 0.1) {
-          let (dieColor, textColor) = self.background(forDie: dieView.tag)
+          let (dieColor, textColor) = self.colors(forDie: dieView.tag)
           dieView.layer.backgroundColor = dieColor
           dieView.textColor = textColor
         }
       }
     case .specialty: // Animate the background change for 10s
-      let (dieColor, textColor) = background(forDie: 10)
+      let (dieColor, textColor) = colors(forDie: 10)
       
       for dieView in diceStack.arrangedSubviews.map({ $0 as! UILabel }) {
         if dieView.tag == 10 {
@@ -182,7 +177,7 @@ class ViewController: UIViewController {
   /// Generates a label with a colored background baced on the value of `die`.
   ///
   /// - Parameter die: The content of the label.
-  /// - Returns: The formatted label. It has a width constraint of 50.
+  /// - Returns: The formatted label. It has a width constraint of 50 and an alpha of zero.
   func diceView(for die: Int) -> UILabel {
     let label = UILabel(frame: CGRect(x: 0, y: 0, width: 50, height: 50))
     label.tag = die
@@ -196,8 +191,10 @@ class ViewController: UIViewController {
                                            constant: 50))
     label.layer.cornerRadius = 5
     label.layer.masksToBounds = true
+    label.alpha = 0
+    label.isHidden = true
     
-    let (dieColor, textColor) = background(forDie: die)
+    let (dieColor, textColor) = colors(forDie: die)
     label.layer.backgroundColor = dieColor
     
     // Set the text and font
@@ -217,7 +214,7 @@ class ViewController: UIViewController {
   ///                  10 + specialty: Dark green.
   ///                  All else: Gray.
   /// - Returns: The CGColor for the associated `die`.
-  func background(forDie die: Int) -> (CGColor, UIColor) {
+  func colors(forDie die: Int) -> (CGColor, UIColor) {
     switch die {
     case 1:
       return (UIColor.systemRed.cgColor, .white)
